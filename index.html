@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friend Journal | AI 情绪手账伴侣 - 路演版</title>
+    <meta name="description" content="将碎片化的情绪，编织成永恒的记忆诗篇。 AI 情绪手账伴侣。">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;500;700&family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        deepSpace: '#050508',
+                        cardBg: '#121212',
+                        cardLight: '#1E1E1E',
+                        glowGold: '#FFB347',
+                        tagYellow: '#FFD700',
+                        accentBlue: '#3B82F6',
+                        accentPink: '#EC4899',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['"Noto Serif SC"', '"Playfair Display"', 'serif'],
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'float-delayed': 'float 6s ease-in-out 3s infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'grow-bar': 'grow 1.5s ease-out forwards',
+                        'fade-in-up': 'fadeInUp 1s ease-out forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        grow: {
+                            '0%': { height: '0%' },
+                        },
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    },
+                    boxShadow: {
+                        'glow': '0 0 20px rgba(255, 215, 0, 0.15)',
+                        'glow-strong': '0 0 30px rgba(255, 215, 0, 0.3)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            background-color: #000000; 
+            color: #E2E8F0; 
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+        .stars {
+            background-image: 
+                radial-gradient(1px 1px at 20px 30px, #ffffff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 40px 70px, #ffffff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 50px 160px, #ffffff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 90px 40px, #ffffff, rgba(0,0,0,0));
+            background-size: 200px 200px;
+            opacity: 0.3;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
+        }
+        .sun-glow {
+            background: radial-gradient(circle, rgba(255,179,71,1) 0%, rgba(255,100,0,0.3) 60%, rgba(0,0,0,0) 70%);
+            filter: blur(25px);
+        }
+        .text-gradient {
+            background: linear-gradient(to right, #FFB347, #FFD700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .mood-pill {
+            background-color: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            color: #FFD700;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Custom Radio Button Styling for Partner Section */
+        .partner-radio:checked + div {
+            border-color: #FFD700;
+            background-color: rgba(255, 215, 0, 0.05);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+        }
+        .partner-radio:checked + div .radio-icon {
+             color: #FFD700;
+             transform: scale(1.1);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="fixed inset-0 stars z-0 pointer-events-none"></div>
+
+    <nav class="fixed w-full z-50 bg-black/60 backdrop-blur-xl border-b border-white/5 supports-[backdrop-filter]:bg-black/30">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-moon text-glowGold text-2xl filter drop-shadow-lg"></i>
+                <span id="nav-logo" class="text-xl font-serif font-bold tracking-[0.15em] text-white">Friend Journal</span>
+            </div>
+            
+            <div class="flex items-center gap-8">
+                <div class="hidden md:flex gap-8 text-sm font-medium text-gray-400">
+                    <a href="#hero" class="hover:text-glowGold transition-colors">花园</a>
+                    <a href="#stories" id="nav-stories" class="hover:text-glowGold transition-colors">痛点</a>
+                    <a href="#memory-showcase" id="nav-memory" class="hover:text-glowGold transition-colors">演示</a>
+                    <a href="#gallery" id="nav-gallery" class="hover:text-glowGold transition-colors">作品</a>
+                    <a href="#summary-showcase" id="nav-summary" class="hover:text-glowGold transition-colors">价值</a>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleLanguage()" class="bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1 rounded-md text-white text-xs font-bold transition backdrop-blur-md">
+                        <span id="lang-text">EN</span>
+                    </button>
+    
+                    <button id="nav-cta" class="hidden sm:block bg-gradient-to-r from-tagYellow to-glowGold text-black font-bold px-6 py-2.5 rounded-full text-sm transition-all duration-300 hover:shadow-glow hover:scale-105 active:scale-95">
+                        下载 App
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <header id="hero" class="relative pt-40 pb-20 min-h-screen flex flex-col items-center justify-center overflow-hidden">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-orange-500/10 rounded-full blur-[150px] z-0 animate-pulse-slow"></div>
+
+        <div class="max-w-5xl mx-auto px-6 flex flex-col items-center relative z-10 text-center">
+            <div class="space-y-8 mb-16 animate-fade-in-up">
+                <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-green-500/20 bg-green-500/5 text-green-400 text-sm font-medium tracking-wider backdrop-blur-md">
+                    <span class="flex h-3 w-3 relative">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                      </span>
+                    <span id="status-online">AI 情感锚点 · 实时在线</span>
+                </div>
+                <h1 class="text-5xl lg:text-7xl font-serif font-bold leading-tight tracking-tight">
+                    <span id="hero-title-1" class="block text-white">将碎片化的情绪，</span>
+                    <span id="hero-title-2" class="text-gradient block mt-2">编织成永恒的记忆诗篇。</span>
+                </h1>
+                <p id="hero-desc" class="text-xl text-gray-300 font-light leading-relaxed max-w-xl mx-auto">
+                     AI 情绪手账伴侣 —— 懂你的倾听者，也是你的生活传记作家。
+                </p>
+            </div>
+
+            <div class="relative w-[380px] h-[760px] border-[8px] border-[#121212] rounded-[4rem] bg-black overflow-hidden shadow-2xl shadow-orange-900/30 ring-1 ring-white/10 z-10 transform hover:scale-[1.02] transition-transform duration-500">
+                <div class="absolute inset-0 bg-gradient-to-b from-[#1a1a1a] to-black flex flex-col">
+                    <div class="px-8 pt-12 pb-4 flex justify-center items-center">
+                        <div class="text-white/70 font-medium text-sm">2025年12月19日</div>
+                    </div>
+                    
+                    <div class="flex-1 flex flex-col items-center justify-center relative px-6">
+                        <div class="w-64 h-64 rounded-full bg-gradient-to-br from-tagYellow/20 to-orange-500/20 animate-pulse-slow relative z-0 flex items-center justify-center border border-white/10 backdrop-blur-md">
+                             <div class="absolute inset-0 rounded-full bg-tagYellow/5 blur-xl"></div>
+                             <p id="phone-prompt" class="text-white/90 font-serif text-xl tracking-wider text-center leading-relaxed drop-shadow-md z-10">今天有什么<br>想分享的吗~❤️</p>
+                        </div>
+                    </div>
+
+                    <div class="pb-12 pt-6 flex items-center justify-center gap-10 w-full z-30">
+                        <div class="w-12 h-12 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-white/50 hover:bg-white/10 hover:text-white/80 transition backdrop-blur-md"><i class="far fa-keyboard text-lg"></i></div>
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-tagYellow to-orange-500 flex items-center justify-center text-black text-2xl shadow-glow-strong cursor-pointer hover:scale-110 transition-transform"><i class="fas fa-microphone"></i></div>
+                        <div class="w-12 h-12 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-white/50 hover:bg-white/10 hover:text-white/80 transition backdrop-blur-md"><i class="fas fa-plus text-lg"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-glowGold/10 blur-[120px] -z-10 rounded-full"></div>
+        </div>
+    </header>
+
+    <section id="stories" class="py-24 relative bg-gradient-to-b from-black via-[#08080A] to-[#0A0A0B] border-t border-white/5">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span id="story-tag" class="text-tagYellow text-sm tracking-[0.3em] uppercase font-bold">核心痛点与机会</span>
+                <h2 id="user-sec-title" class="text-4xl md:text-5xl font-serif font-bold text-white mt-6 leading-tight">倍速时代下的<br>“表达过剩”与“记录匮乏”</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <div class="glass-card p-5 rounded-[1.5rem] relative group border-t-4 border-t-accentPink/70 flex flex-col h-full hover:border-t-accentPink transition-all">
+                    <div class="flex items-center gap-3 mb-4">
+                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=150&q=80" class="w-12 h-12 rounded-full border-2 border-accentPink/50 p-0.5 object-cover">
+                        <div>
+                            <div class="font-bold text-white text-lg">林林</div>
+                            <div id="p1-badge" class="text-[10px] bg-accentPink text-white px-2 py-0.5 rounded-full font-bold inline-block mb-1">生活策展人</div>
+                            <div id="p1-role" class="text-xs text-gray-400">24岁 · 职场新人</div>
+                        </div>
+                    </div>
+                    <div class="space-y-3 flex-1">
+                        <div class="bg-white/5 p-3 rounded-xl border border-white/5 group-hover:bg-white/10 transition-colors">
+                            <div class="flex items-center gap-2 mb-1"><i class="fas fa-camera text-accentPink/80 text-sm"></i><span id="p1-pain-label" class="text-[10px] text-accentPink uppercase tracking-widest font-black">Pain · 审美强迫症</span></div>
+                            <p id="p1-pain-text" class="text-gray-300 text-sm leading-snug">"囤了5000+张照片，想发朋友圈但懒得修图排版，最后都成了'电子垃圾'。"</p>
+                        </div>
+                        <div class="bg-accentPink/10 p-3 rounded-xl border border-accentPink/30 group-hover:bg-accentPink/20 transition-colors">
+                            <div class="flex items-center gap-2 mb-1"><i class="fas fa-wand-magic-sparkles text-accentPink text-sm"></i><span id="p1-sol-label" class="text-[10px] text-accentPink uppercase tracking-widest font-black">Solution · 一键成片</span></div>
+                            <p id="p1-sol-text" class="text-white text-sm leading-snug font-medium">"AI 自动识别最佳时刻，匹配模版与色调。随手记秒变杂志大片，审美兜底让我轻松分享。"</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-5 rounded-[1.5rem] relative group border-t-4 border-t-accentBlue/70 flex flex-col h-full hover:border-t-accentBlue transition-all">
+                    <div class="flex items-center gap-3 mb-4">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=150&q=80" class="w-12 h-12 rounded-full border-2 border-accentBlue/50 p-0.5 object-cover">
+                        <div>
+                            <div class="font-bold text-white text-lg">Jason</div>
+                            <div id="p2-badge" class="text-[10px] bg-accentBlue text-white px-2 py-0.5 rounded-full font-bold inline-block mb-1">空心打工人</div>
+                            <div id="p2-role" class="text-xs text-gray-400">30岁 · 金融PM</div>
+                        </div>
+                    </div>
+                    <div class="space-y-3 flex-1">
+                        <div class="bg-white/5 p-3 rounded-xl border border-white/5 group-hover:bg-white/10 transition-colors">
+                            <div class="flex items-center gap-2 mb-1"><i class="fas fa-battery-quarter text-accentBlue/80 text-sm"></i><span id="p2-pain-label" class="text-[10px] text-accentBlue uppercase tracking-widest font-black">Pain · 忙碌无掌控</span></div>
+                            <p id="p2-pain-text" class="text-gray-300 text-sm leading-snug">"每天开会像打仗，下班脑子像浆糊。想复盘却提笔忘字，感觉今天做了很多事又好像什么都没做。"</p>
+                        </div>
+                        <div class="bg-accentBlue/10 p-3 rounded-xl border border-accentBlue/30 group-hover:bg-accentBlue/20 transition-colors">
+                            <div class="flex items-center gap-2 mb-1"><i class="fas fa-microphone-lines text-accentBlue text-sm"></i><span id="p2-sol-label" class="text-[10px] text-accentBlue uppercase tracking-widest font-black">Solution · 语音碎念整理</span></div>
+                            <p id="p2-sol-text" class="text-white text-sm leading-snug font-medium">"下班路上碎碎念，AI 自动生成结构化复盘。告诉我'你今天很有耐心'，提供急需的情绪价值。"</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card p-5 rounded-[1.5rem] relative group border-t-4 border-t-tagYellow/70 flex flex-col h-full hover:border-t-tagYellow transition-all">
+                    <div class="flex items-center gap-3 mb-4">
+                        <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&auto=format&fit=crop&w=150&q=80" class="w-12 h-12 rounded-full border-2 border-tagYellow/50 p-0.5 object-cover">
+                        <div>
+                            <div class="font-bold text-white text-lg">阿星</div>
+                            <div id="p3-badge" class="text-[10px] bg-tagYellow text-black px-2 py-0.5 rounded-full font-bold inline-block mb-1">Flag立旗王</div>
+                            <div id="p3-role" class="text-xs text-gray-400">21岁 · 考研党</div>
+                        </div>
+                    </div>
+                    <div class="space-y-3 flex-1">
+                        <div class="bg-white/5 p-3 rounded-xl border border-white/5 group-hover:bg-white/10 transition-colors">
+                            <div class="flex items-center gap-2 mb-1"><i class="fas fa-flag text-tagYellow/80 text-sm"></i><span id="p3-pain-label" class="text-[10px] text-tagYellow uppercase tracking-widest font-black">Pain · 三分钟热度</span></div>
+                            <p id="p3-pain-text" class="text-gray-300 text-sm leading-snug">"差生文具多，买了iPad和本子，但坚持打卡不超过3天。一旦断更就破罐子破摔，记录太分散。"</p>
+                        </div>
+                        <div class="bg-tagYellow/10 p-3 rounded-xl border border-tagYellow/30 group-hover:bg-tagYellow/20 transition-colors">
+                            <div class="flex items-center gap-2 mb-1"><i class="fas fa-comments text-tagYellow text-sm"></i><span id="p3-sol-label" class="text-[10px] text-tagYellow uppercase tracking-widest font-black">Solution · 主动式交互</span></div>
+                            <p id="p3-sol-text" class="text-white text-sm leading-snug font-medium">"AI 像私人教练一样主动弹窗问候。通过 Memory Graph 串联碎片记录，让我看到成长的轨迹。"</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="memory-showcase" class="py-32 bg-[#0A0A0B] border-t border-white/5 relative overflow-hidden">
+        <div class="absolute top-1/3 left-0 w-[600px] h-[600px] bg-accentBlue/10 rounded-full blur-[150px] -z-10"></div>
+
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-20">
+                <span id="mem-tag" class="text-tagYellow text-sm tracking-[0.3em] uppercase font-bold">功能演示：生成层</span>
+                <h2 id="mem-sec-title" class="text-4xl md:text-5xl font-serif font-bold text-white mt-6">永不缺席的温柔聆听者</h2>
+                <p id="mem-sec-desc" class="text-gray-400 mt-6 max-w-3xl mx-auto text-lg leading-relaxed">无论昼夜，随时随地。将生活的细枝末节与内心的思绪万千，安心交付给这位永远在场的朋友。</p>
+            </div>
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                <div class="relative mx-auto lg:mx-0 w-[360px] h-[720px] border-[8px] border-[#121212] rounded-[3.5rem] bg-black overflow-hidden shadow-2xl ring-1 ring-white/10 z-10">
+                     <div class="absolute inset-0 bg-deepSpace flex flex-col">
+                        <div class="px-6 pt-14 pb-4 flex justify-between items-end bg-gradient-to-b from-black/50 to-transparent">
+                            <div class="text-white">
+                                <div id="mem-ui-sub" class="text-xs text-gray-400 font-medium tracking-wider uppercase">Timeline</div>
+                                <div id="mem-ui-title" class="text-2xl font-serif font-bold mt-1">我的记忆</div>
+                            </div>
+                            <button id="mem-ui-save" class="bg-tagYellow/90 hover:bg-tagYellow text-black text-xs font-bold px-4 py-2 rounded-full flex items-center gap-2 shadow-glow transition-all"><i class="fas fa-plus"></i> 保存今日</button>
+                        </div>
+                        
+                        <div class="flex px-6 mb-4 border-b border-white/10">
+                            <div id="mem-ui-tab-1" class="text-tagYellow font-bold border-b-2 border-tagYellow pb-3 flex-1 text-center text-sm flex items-center justify-center gap-2"><i class="fas fa-star"></i> 每日</div>
+                            <div id="mem-ui-tab-2" class="text-gray-500 pb-3 flex-1 text-center text-sm flex items-center justify-center gap-2 hover:text-gray-300 transition-colors"><i class="far fa-calendar"></i> 每周</div>
+                            <div id="mem-ui-tab-3" class="text-gray-500 pb-3 flex-1 text-center text-sm flex items-center justify-center gap-2 hover:text-gray-300 transition-colors"><i class="fas fa-book-open"></i> 每月</div>
+                        </div>
+
+                        <div class="px-6 space-y-6 pb-10 overflow-y-auto h-full scrollbar-hide mask-image-b">
+                            <div class="bg-cardLight/80 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-colors shadow-lg">
+                                <div class="h-40 bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1477601263568-180e2c6d046e?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80');">
+                                     <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                                     <div class="absolute bottom-4 left-4 text-white">
+                                         <span class="text-gray-300 text-xs font-medium">12月19日 · 下午 4:30</span>
+                                         <h3 id="mem-c1-t" class="font-serif font-bold text-xl mt-1 text-shadow">初雪与热咖啡</h3>
+                                     </div>
+                                </div>
+                                <div class="p-5">
+                                    <div class="flex gap-3 mb-4 text-2xl filter grayscale-[30%]">❄️ ☕️ 🧣</div>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span id="mem-c1-mood-1" class="mood-pill bg-blue-500/10 text-blue-400 border-blue-500/20">惊喜</span>
+                                        <span id="mem-c1-mood-2" class="mood-pill bg-indigo-500/10 text-indigo-400 border-indigo-500/20">治愈</span>
+                                        <span id="mem-c1-mood-3" class="mood-pill">宁静</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-cardLight/80 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-colors shadow-lg">
+                                <div class="h-40 bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1506619216599-9d16d0903dfd?ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80');">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                                     <div class="absolute bottom-4 left-4 text-white">
+                                         <span class="text-gray-300 text-xs font-medium">12月16日 · 上午 10:15</span>
+                                         <h3 id="mem-c2-t" class="font-serif font-bold text-xl mt-1 text-shadow">久违的阳光与书</h3>
+                                     </div>
+                                </div>
+                                <div class="p-5">
+                                    <div class="flex gap-3 mb-4 text-2xl filter grayscale-[30%]">☀️ 📖 🪴</div>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span id="mem-c2-mood-1" class="mood-pill bg-orange-500/10 text-orange-400 border-orange-500/20">温暖</span>
+                                        <span id="mem-c2-mood-2" class="mood-pill bg-green-500/10 text-green-400 border-green-500/20">充实</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                         <div class="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-deepSpace to-transparent pointer-events-none"></div>
+                    </div>
+                </div>
+                
+                <div class="space-y-10 lg:pl-16">
+                    <div class="glass-card p-10 rounded-[2.5rem] border-l-[6px] border-l-tagYellow hover:pl-12 transition-all group">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-12 h-12 rounded-full bg-tagYellow/10 flex items-center justify-center text-tagYellow text-2xl group-hover:scale-110 transition-transform"><i class="fas fa-bolt"></i></div>
+                            <h3 id="mem-feat-1-t" class="text-3xl font-bold text-white">低门槛交互</h3>
+                        </div>
+                        <p id="mem-feat-1-d" class="text-gray-400 leading-relaxed text-lg">极简输入。支持语音碎碎念（自动转文字+语气分析）、图片抛送。AI 实时给予高情商的情绪反馈，像和朋友聊天一样自然。</p>
+                    </div>
+                    <div class="glass-card p-10 rounded-[2.5rem] border-l-[6px] border-l-accentBlue hover:pl-12 transition-all group">
+                        <div class="flex items-center gap-4 mb-4">
+                             <div class="w-12 h-12 rounded-full bg-accentBlue/10 flex items-center justify-center text-accentBlue text-2xl group-hover:scale-110 transition-transform"><i class="fas fa-brain"></i></div>
+                            <h3 id="mem-feat-2-t" class="text-3xl font-bold text-white">情绪与氛围感知</h3>
+                        </div>
+                        <p id="mem-feat-2-d" class="text-gray-400 leading-relaxed text-lg">AI 不止读懂文字，更读懂你的弦外之音。智能提取当天的“情绪关键词”和“氛围 Emoji”，让每一天的记忆都有独特的味道。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="gallery" class="py-32 bg-[#0A0A0B] border-t border-white/5 relative">
+        <div class="absolute top-0 right-0 w-[800px] h-[800px] bg-purple-900/10 rounded-full blur-[150px] -z-10"></div>
+        <div class="max-w-7xl mx-auto px-6 relative z-10">
+            <div class="text-center mb-20">
+                <span id="gal-tag" class="text-tagYellow text-sm tracking-[0.3em] uppercase font-bold">视觉展示</span>
+                <h2 id="gal-title" class="text-4xl md:text-5xl font-serif font-bold text-white mt-6">生成的每一页，都是艺术品</h2>
+                <p id="gal-desc" class="text-gray-400 mt-6 max-w-3xl mx-auto text-lg leading-relaxed">无需排版，AI 自动抓取你的图片和情绪，基于大模型美学生成手绘风格的精美手账。</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-10">
+                
+                <div onclick="openModal(0)" class="group relative overflow-hidden rounded-[2rem] bg-white p-2 transform rotate-[-2deg] hover:rotate-0 hover:scale-105 transition-all duration-500 shadow-2xl cursor-pointer">
+                    <div class="relative h-[450px] overflow-hidden rounded-xl">
+                        <img src="images/snow.png" class="w-full h-full object-cover opacity-95">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent"></div>
+                        
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                            <div class="bg-white/20 border border-white/30 px-4 py-2 rounded-full text-white text-xs font-bold flex items-center gap-2">
+                                <i id="case-view0" class="far fa-images"></i> 查看原图
+                            </div>
+                        </div>
+    
+                        <div class="absolute bottom-6 left-6 text-left">
+                            <span class="text-[9px] bg-white/20 backdrop-blur px-2 py-0.5 rounded text-white border border-white/10">Winter Vibe</span>
+                            <h3 class="text-white font-serif text-xl mt-2">北京初雪 · 清华园</h3>
+                            <p class="text-gray-300 text-[10px] mt-1">AI 提取：雪景、建筑、雪球</p>
+                        </div>
+                    </div>
+                </div>
+    
+                <div onclick="openModal(1)" class="group relative overflow-hidden rounded-[2rem] bg-white p-2 transform translate-y-8 md:translate-y-0 hover:scale-105 transition-all duration-500 shadow-2xl z-10 cursor-pointer">
+                    <div class="relative h-[450px] overflow-hidden rounded-xl">
+                        <img src="images/Christmas.png" class="w-full h-full object-cover opacity-95">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent"></div>
+                        
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                            <div class="bg-white/20 border border-white/30 px-4 py-2 rounded-full text-white text-xs font-bold flex items-center gap-2">
+                                <i id="case-view1" class="far fa-images"></i> 查看原图
+                            </div>
+                        </div>
+    
+                        <div class="absolute bottom-6 left-6 text-left">
+                            <span class="text-[9px] bg-tagYellow text-black px-2 py-0.5 rounded font-bold">Festival</span>
+                            <h3 class="text-white font-serif text-xl mt-2">环球影城 · 圣诞快乐</h3>
+                            <p class="text-gray-300 text-[10px] mt-1">AI 提取：合影、地标、节日氛围</p>
+                        </div>
+                    </div>
+                </div>
+    
+                <div onclick="openModal(2)" class="group relative overflow-hidden rounded-[2rem] bg-white p-2 transform rotate-[2deg] hover:rotate-0 hover:scale-105 transition-all duration-500 shadow-2xl cursor-pointer">
+                    <div class="relative h-[450px] overflow-hidden rounded-xl">
+                        <img src="images/sick.png" class="w-full h-full object-cover opacity-95">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent"></div>
+                        
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                            <div class="bg-white/20 border border-white/30 px-4 py-2 rounded-full text-white text-xs font-bold flex items-center gap-2">
+                                <i id="case-view2" class="far fa-images"></i> 查看原图
+                            </div>
+                        </div>
+    
+                        <div class="absolute bottom-6 left-6 text-left">
+                            <span class="text-[9px] bg-blue-500 text-white px-2 py-0.5 rounded">Healing</span>
+                            <h3 class="text-white font-serif text-xl mt-2">治愈时刻 · 药物与希望</h3>
+                            <p class="text-gray-300 text-[10px] mt-1">AI 提取：舒适食物、药品、独处</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Data Source - 对应您的本地文件名
+        const cases = [
+            {
+                // Case 0: Snow
+                title: "北京初雪 · 温暖时刻",
+                resultImg: "images/snow.png", // 本地成品图
+                rawImages: [
+                    "images/snow1.jpg", // 建议替换为: "images/raw_snow_1.jpg"
+                    "images/snow2.jpg", // 建议替换为: "images/raw_snow_2.jpg"
+                    "images/snow3.jpg"  // 建议替换为: "images/raw_snow_3.jpg"
+                ]
+            },
+            {
+                // Case 1: Universal
+                title: "环球影城 · 圣诞狂欢",
+                resultImg: "images/Christmas.png", // 本地成品图
+                rawImages: [
+                    "images/christmas1.jpg", // 建议替换为: "images/raw_uni_1.jpg"
+                    "images/christmas2.jpg", 
+                    "images/christmas3.jpg"
+                ]
+            },
+            {
+                // Case 2: Healing
+                title: "治愈时刻 · 药物与希望",
+                resultImg: "images/sick.png", // 本地成品图
+                rawImages: [
+                    "images/sick1.jpg", // 建议替换为: "images/raw_food_1.jpg"
+                    "images/sick2.jpg", 
+                    "images/sick3.jpg"
+                ]
+            }
+        ];
+    
+        // 随机生成位置和旋转的辅助函数
+        function getRandomTransform() {
+            const rot = Math.floor(Math.random() * 40) - 20; // -20 to 20 deg
+            const x = Math.floor(Math.random() * 60) - 30;   // -30 to 30 px
+            const y = Math.floor(Math.random() * 60) - 30;   // -30 to 30 px
+            return `rotate(${rot}deg) translate(${x}px, ${y}px)`;
+        }
+    
+        // 点击照片时的浮动动效
+        function floatImage(element) {
+            element.style.transition = "transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)";
+            element.style.transform = getRandomTransform() + " scale(1.1)";
+            
+            setTimeout(() => {
+                element.style.transform = element.style.transform.replace("scale(1.1)", "scale(1)");
+            }, 600);
+        }
+    
+        function openModal(index) {
+            const data = cases[index];
+            const modal = document.getElementById('compareModal');
+            const container = document.getElementById('rawImagesContainer');
+            const resultImg = document.getElementById('resultImage');
+            const resultTitle = document.getElementById('resultTitle');
+    
+            // 设置右侧成品图
+            resultImg.src = data.resultImg;
+            resultTitle.innerText = data.title;
+    
+            // 生成左侧散乱原图
+            container.innerHTML = '';
+            data.rawImages.forEach((imgSrc, i) => {
+                const img = document.createElement('img');
+                img.src = imgSrc;
+                // 拍立得样式
+                img.className = "absolute w-40 h-48 md:w-48 md:h-60 object-cover border-[6px] border-white bg-white shadow-2xl rounded-sm cursor-pointer hover:z-50 hover:shadow-glow transition-all";
+                
+                // 初始随机位置
+                img.style.transform = getRandomTransform();
+                img.onclick = function() { floatImage(this); }; // 绑定点击事件
+                
+                container.appendChild(img);
+            });
+    
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+    
+        function closeModal() {
+            const modal = document.getElementById('compareModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    </script>
+
+<div id="compareModal" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-black/90 backdrop-blur-xl" onclick="closeModal()"></div>
+    
+    <div class="absolute inset-0 flex flex-col items-center justify-center p-4 md:p-10 pointer-events-none">
+        
+        <button onclick="closeModal()" class="pointer-events-auto absolute top-6 right-6 text-white/50 hover:text-white transition bg-white/10 rounded-full w-10 h-10 flex items-center justify-center">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <div class="w-full max-w-6xl grid grid-cols-1 md:grid-cols-9 gap-8 items-center pointer-events-auto">
+            
+            <div class="md:col-span-4 flex flex-col items-center">
+                <div class="text-tagYellow text-xs font-bold tracking-widest uppercase mb-6 flex items-center gap-2">
+                    <i class="fas fa-images"></i> User Input (用户投喂)
+                </div>
+                
+                <div id="rawImagesContainer" class="relative w-full h-[400px] flex items-center justify-center">
+                    </div>
+                
+                <p id="case-raw" class="text-gray-400 text-xs mt-6 text-center max-w-xs">
+                    用户只需上传散乱、未修饰的“生活切片”<br>(如：随手拍的风景、食物、截图)
+                </p>
+            </div>
+
+            <div class="md:col-span-1 flex flex-col items-center justify-center gap-2 text-center">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-r from-tagYellow to-orange-500 flex items-center justify-center text-black text-xl shadow-[0_0_30px_rgba(255,215,0,0.4)] animate-pulse">
+                    <i class="fas fa-wand-magic-sparkles"></i>
+                </div>
+                <span class="text-white/50 text-[10px] tracking-widest mt-2">AI PROCESSING</span>
+                <div class="h-px w-20 bg-gradient-to-r from-transparent via-white/20 to-transparent my-2 md:hidden"></div>
+            </div>
+
+            <div class="md:col-span-4 flex flex-col items-center">
+                <div class="text-[#4ade80] text-xs font-bold tracking-widest uppercase mb-6 flex items-center gap-2">
+                    <i class="fas fa-check-circle"></i> AI Generated (手账成品)
+                </div>
+                
+                <div class="relative rounded-2xl p-2 bg-white transform rotate-1 transition duration-500 hover:rotate-0 shadow-2xl w-full max-w-sm">
+                    <img id="resultImage" src="" class="w-full rounded-lg object-cover shadow-inner h-[450px]">
+                    <div class="absolute bottom-6 left-6 right-6">
+                        <h3 id="resultTitle" class="text-white font-serif text-2xl font-bold drop-shadow-md"></h3>
+                        <div class="flex gap-2 mt-2">
+                            <span id="resultTag" class="text-[10px] bg-white/90 text-black px-2 py-1 rounded font-bold shadow-sm"></span>
+                        </div>
+                    </div>
+                    <div class="absolute inset-0 rounded-lg bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
+                </div>
+
+                <p id="case-ai" class="text-gray-400 text-xs mt-6 text-center max-w-xs">
+                    AI 自动完成：排版布局 + 色调统一 + 文案润色 + 情感升华
+                </p>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+    <section id="summary-showcase" class="py-32 bg-deepSpace relative overflow-hidden">
+        <div class="absolute bottom-0 left-1/4 w-[800px] h-[800px] bg-tagYellow/5 rounded-full blur-[150px] -z-10"></div>
+
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-24">
+                <span id="sum-tag" class="text-tagYellow text-sm tracking-[0.3em] uppercase font-bold">长期陪伴价值</span>
+                <h2 id="sum-sec-title" class="text-4xl md:text-5xl font-serif font-bold text-white mt-6">建立“生活成就感”</h2>
+            </div>
+            
+            <div class="grid lg:grid-cols-2 gap-20 items-center mb-40">
+                <div class="order-2 lg:order-1 space-y-10">
+                    <div class="glass-card p-10 rounded-[2.5rem]">
+                        <div class="w-14 h-14 rounded-full bg-tagYellow/20 flex items-center justify-center text-tagYellow text-3xl mb-6 shadow-glow"><i class="fas fa-chart-pie"></i></div>
+                        <h3 id="sum-feat-1-t" class="text-3xl font-bold text-white mb-4">情绪白皮书</h3>
+                        <p id="sum-feat-1-d" class="text-gray-400 text-lg leading-relaxed">AI 会基于与你的日常对话，分析你的情绪波动趋势与积极情绪比例，帮你构建对生活的“满足感”。</p>
+                    </div>
+                    <div class="glass-card p-10 rounded-[2.5rem]">
+                        <div class="w-14 h-14 rounded-full bg-accentBlue/20 flex items-center justify-center text-accentBlue text-3xl mb-6"><i class="fas fa-gift"></i></div>
+                        <h3 id="sum-feat-2-t" class="text-3xl font-bold text-white mb-4">时光手账礼物</h3>
+                        <p id="sum-feat-2-d" class="text-gray-400 text-lg leading-relaxed">AI会通过周/月/年生成总结手账，帮你建立生活轨迹的成就感。那些你快要遗忘的小确幸，我们都帮你记得。</p>
+                    </div>
+                </div>
+                <div class="order-1 lg:order-2 relative mx-auto lg:mx-0 w-[380px] h-[760px] border-[8px] border-[#121212] rounded-[4rem] bg-black overflow-hidden shadow-2xl ring-1 ring-white/10 scale-95 lg:scale-100">
+                    <div class="absolute inset-0 bg-[#0A0A0B] flex flex-col p-6">
+                        <div class="pt-12 pb-6 flex items-center gap-4 text-white">
+                            <i class="fas fa-chevron-left text-gray-400 text-lg"></i><span id="sum-ui-title" class="text-2xl font-serif font-bold">情绪白皮书</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 mb-8">
+                            <div class="bg-cardLight/50 rounded-3xl p-5 border border-white/5">
+                                <div class="text-tagYellow font-bold text-4xl">342</div>
+                                <div id="sum-ui-l1" class="text-gray-400 text-sm mt-2 font-medium">总记录瞬间</div>
+                            </div>
+                             <div class="bg-cardLight/50 rounded-3xl p-5 border border-white/5">
+                                <div class="text-white font-bold text-4xl">89%</div>
+                                <div id="sum-ui-l2" class="text-gray-400 text-sm mt-2 font-medium">情绪正向率</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-cardLight/50 rounded-3xl p-6 border border-white/5 mb-6">
+                            <div id="sum-ui-chart" class="flex items-center gap-2 text-white font-bold mb-6"><i class="fas fa-chart-line text-tagYellow"></i> 近30天情绪波动</div>
+                            <div class="h-32 flex items-end justify-between px-2 relative">
+                                <svg class="absolute inset-0 h-full w-full z-0" preserveAspectRatio="none" viewBox="0 0 100 100">
+                                    <path d="M0,80 C20,60 40,90 60,40 S80,10 100,30" stroke="rgba(255,215,0,0.5)" stroke-width="3" fill="none" />
+                                    <path d="M0,80 C20,60 40,90 60,40 S80,10 100,30 L100,100 L0,100 Z" fill="url(#gradient)" opacity="0.2" />
+                                    <defs>
+                                        <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                          <stop offset="0%" style="stop-color:rgb(255,215,0);stop-opacity:1" />
+                                          <stop offset="100%" style="stop-color:rgb(255,215,0);stop-opacity:0" />
+                                        </linearGradient>
+                                      </defs>
+                                </svg>
+                                <div class="w-2 h-2 bg-tagYellow rounded-full z-10 mb-[20px]"></div>
+                                <div class="w-2 h-2 bg-tagYellow rounded-full z-10 mb-[40px]"></div>
+                                <div class="w-2 h-2 bg-tagYellow rounded-full z-10 mb-[10px]"></div>
+                                <div class="w-2 h-2 bg-tagYellow rounded-full z-10 mb-[60px]"></div>
+                                <div class="w-2 h-2 bg-tagYellow rounded-full z-10 mb-[30px]"></div>
+                            </div>
+                            <div class="flex justify-between text-gray-500 text-xs mt-3 px-1"><span>11.01</span><span>11.15</span><span>11.30</span></div>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-cardLight to-black rounded-3xl p-6 border border-white/10">
+                            <div id="sum-ui-gen" class="flex items-center gap-2 text-white font-bold mb-6"><i class="fas fa-wand-magic-sparkles text-tagYellow"></i> 生成新的报告</div>
+                            <div class="grid grid-cols-3 gap-4">
+                                <button class="bg-white/5 hover:bg-tagYellow/20 rounded-2xl p-4 flex flex-col items-center justify-center border border-white/10 hover:border-tagYellow/50 transition-all group">
+                                    <i class="far fa-calendar-alt text-tagYellow text-xl mb-3 group-hover:scale-110 transition"></i>
+                                    <span id="sum-ui-w" class="text-white text-xs font-bold">周总结</span>
+                                </button>
+                                <button class="bg-tagYellow/20 rounded-2xl p-4 flex flex-col items-center justify-center border border-tagYellow/50 transition-all scale-105 shadow-glow group">
+                                    <i class="fas fa-chart-pie text-tagYellow text-xl mb-3 group-hover:scale-110 transition"></i>
+                                    <span id="sum-ui-m" class="text-white text-xs font-bold">月总结</span>
+                                    <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+                                </button>
+                                <button class="bg-white/5 hover:bg-tagYellow/20 rounded-2xl p-4 flex flex-col items-center justify-center border border-white/10 hover:border-tagYellow/50 transition-all group">
+                                    <i class="fas fa-book text-tagYellow text-xl mb-3 group-hover:scale-110 transition"></i>
+                                    <span id="sum-ui-y" class="text-white text-xs font-bold">年度总结</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="partner-customization" class="grid lg:grid-cols-2 gap-20 items-start">
+                <div>
+                    
+                    <div class="text-left mb-10">
+                        <span id="cust-tag" class="text-tagYellow text-sm tracking-[0.3em] uppercase font-bold">AI人格</span>
+                        <h2 id="part-sec-title" class="text-4xl font-serif font-bold text-white mt-4">自定义 AI伙伴 </h2>
+                        <p id="part-sec-desc" class="text-gray-400 mt-4 text-lg leading-relaxed">并不是所有的陪伴都前篇一律。用户可根据自己的喜好定义AI的语言风格。</p>
+                    </div>
+                    <div class="relative w-full border-[1px] border-white/10 rounded-[3rem] bg-[#0A0A0B] overflow-hidden shadow-2xl ring-1 ring-white/5 p-8">
+                        <div class="flex items-center gap-3 mb-8">
+                             <div class="w-10 h-10 rounded-full bg-accentPink/20 flex items-center justify-center text-accentPink text-xl"><i class="fas fa-user-astronaut"></i></div>
+                            <h3 id="cust-ui-title" class="font-bold text-2xl text-white">选择你的 AI 伙伴</h3>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <label class="cursor-pointer group relative">
+                                <input type="radio" name="ai-style" class="peer partner-radio hidden" checked>
+                                <div class="bg-white/5 p-6 rounded-3xl border border-white/10 transition-all h-full flex flex-col justify-between hover:border-white/30 peer-checked:border-tagYellow peer-checked:bg-tagYellow/5 peer-checked:shadow-glow">
+                                    <div class="radio-icon text-accentPink text-3xl mb-4 transition-all"><i class="fas fa-heart"></i></div>
+                                    <div>
+                                         <div class="flex items-center gap-2 mb-2"><span id="cust-opt-1" class="text-white font-bold text-lg">温柔型</span><span id="cust-opt-1-sub" class="text-gray-400 text-sm">(小暖)</span></div>
+                                         <div id="cust-opt-1-d" class="text-gray-500 text-sm leading-relaxed">细腻共情，永远站在你这边，提供情绪价值。</div>
+                                    </div>
+                                    <div class="absolute top-4 right-4 w-5 h-5 rounded-full border-2 border-gray-600 peer-checked:border-tagYellow peer-checked:bg-tagYellow transition-all"></div>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer group relative">
+                                <input type="radio" name="ai-style" class="peer partner-radio hidden">
+                                <div class="bg-white/5 p-6 rounded-3xl border border-white/10 transition-all h-full flex flex-col justify-between hover:border-white/30 peer-checked:border-tagYellow peer-checked:bg-tagYellow/5 peer-checked:shadow-glow">
+                                    <div class="radio-icon text-accentBlue text-3xl mb-4 transition-all"><i class="fas fa-brain"></i></div>
+                                    <div>
+                                         <div class="flex items-center gap-2 mb-2"><span id="cust-opt-2" class="text-white font-bold text-lg">理智型</span><span id="cust-opt-2-sub" class="text-gray-400 text-sm">(Ego)</span></div>
+                                         <div id="cust-opt-2-d" class="text-gray-500 text-sm leading-relaxed">逻辑清晰，帮你拆解问题，提供解决方案。</div>
+                                    </div>
+                                     <div class="absolute top-4 right-4 w-5 h-5 rounded-full border-2 border-gray-600 peer-checked:border-tagYellow peer-checked:bg-tagYellow transition-all"></div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="text-left mb-10">
+                        <span id="time-tag" class="text-tagYellow text-sm tracking-[0.3em] uppercase font-bold">每日时刻</span>
+                        <h2 id="time-sec-title" class="text-4xl font-serif font-bold text-white mt-4">自定义手账推送时间</h2>
+                        <p id="time-sec-desc" class="text-gray-400 mt-4 text-lg leading-relaxed">根据用户的生活习惯，自定义手账生成时间。让AI为你悄悄整理好一天的碎片，睡前打开手机，惊喜已在等候。</p>
+                    </div>
+                    <div class="relative w-full border-[1px] border-white/10 rounded-[3rem] bg-[#0A0A0B] overflow-hidden shadow-2xl flex items-center justify-center ring-1 ring-white/5 p-10 h-[400px]">
+                         <div class="w-full h-full flex flex-col justify-center items-center text-center">
+                            <div class="w-16 h-16 rounded-full bg-tagYellow/20 flex items-center justify-center text-tagYellow text-3xl mb-6 shadow-glow"><i class="far fa-clock"></i></div>
+                            <h3 id="time-ui-title" class="font-bold text-2xl text-white mb-3">设定你的“回忆时刻”</h3>
+                            <p id="time-ui-sub" class="text-gray-500 text-sm mb-10">AI 将在每天的这个时间为你呈上手账</p>
+                            
+                            <div class="relative group cursor-pointer">
+                                 <div class="absolute inset-0 bg-tagYellow/20 blur-[40px] rounded-full group-hover:bg-tagYellow/30 transition-all"></div>
+                                <div class="relative bg-cardLight/80 backdrop-blur-xl border-2 border-tagYellow/50 rounded-3xl p-6 px-12 text-center shadow-glow-strong group-hover:scale-105 transition-transform">
+                                    <span class="text-6xl font-black text-white tracking-widest font-mono text-shadow-lg flex items-center justify-center gap-2">
+                                        <span>21</span><span class="animate-pulse">:</span><span>00</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <p id="time-ui-d" class="text-tagYellow/80 text-sm mt-6 font-medium"><i class="fas fa-check-circle mr-2"></i>已设定为每天晚上 9 点</p>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="h-screen flex items-center justify-center relative bg-black overflow-hidden">
+        <div class="absolute inset-0 stars opacity-50"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-tagYellow/10 via-transparent to-transparent"></div>
+        <div class="relative z-10 text-center px-6 animate-fade-in-up">
+            <i class="fas fa-quote-left text-5xl text-tagYellow/30 mb-10 block"></i>
+            <h2 class="text-4xl md:text-6xl font-serif font-light text-white leading-relaxed mb-8 tracking-wide">
+                <span id="quote-1">在这个喧嚣的世界里，</span><br>
+                <span id="quote-2">你需要一个</span><span id="quote-3" class="text-tagYellow font-medium relative inline-block">
+                    只属于你的引力场
+                    <svg class="absolute -bottom-2 left-0 w-full" height="10" viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0,5 Q50,10 100,5" stroke="#FFD700" stroke-width="2" fill="none" opacity="0.5"/></svg>
+                </span>。
+            </h2>
+            <div class="mt-16 flex flex-col items-center gap-4">
+                <div class="w-20 h-20 rounded-full border-2 border-tagYellow p-1 shadow-glow">
+                    <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=200&h=200&fit=crop" alt="Founder Jiaxi" class="w-full h-full rounded-full object-cover filter grayscale-[20%] hover:grayscale-0 transition duration-500">
+                </div>
+                <div class="text-center">
+                    <div class="text-white font-bold text-xl tracking-widest mb-1">Jiaxi</div>
+                    <div id="quote-rec" class="text-tagYellow/80 text-sm font-medium">Friend Journal 创始人</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="border-t border-white/10 bg-black py-16 relative z-10">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="flex items-center gap-3 opacity-80 hover:opacity-100 transition">
+                <i class="fas fa-moon text-glowGold text-2xl"></i>
+                <span class="text-lg font-serif text-white tracking-wider">Friend Journal</span>
+            </div>
+            <div class="text-gray-500 text-sm text-center md:text-right">
+                <p id="foot-cr" class="mb-4">© 2025 Friend Journal. 基于大语言模型的 AI 陪伴式智能手账.</p>
+                <div class="flex gap-6 justify-center md:justify-end">
+                    <a id="foot-p" href="#" class="hover:text-tagYellow transition-colors">隐私协议</a>
+                    <a id="foot-t" href="#" class="hover:text-tagYellow transition-colors">服务条款</a>
+                    <a href="#" class="hover:text-tagYellow transition-colors"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="hover:text-tagYellow transition-colors"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const translations = {
+            zh: {
+                "nav-logo": "Friend Journal",
+                "nav-stories": "痛点",
+                "nav-memory": "演示",
+                "nav-gallery": "作品",
+                "nav-summary": "价值",
+                "nav-cta": "下载 App",
+                "status-online": "AI 情感锚点 · 实时在线",
+                "hero-title-1": "将碎片化的情绪，",
+                "hero-title-2": "编织成永恒的记忆诗篇。",
+                "hero-desc": "全自动 AI 情绪手账伴侣 —— 懂你的倾听者，也是你的生活传记作家。",
+                "btn-start": "开始倾诉 <i class='fas fa-microphone'></i>",
+                "hero-sub": "效率革命：5秒/篇",
+                "phone-app-name": "Jiaxi的日记",
+                "phone-status-text": "光之伙伴",
+                "phone-prompt": "今天有什么<br>想分享的吗~❤️",
+                "story-tag": "核心痛点与机会",
+                "user-sec-title": "倍速时代下的<br>“表达过剩”与“记录匮乏”",
+                "story-desc": "心理压力激增，用户渴望被倾听，但碎片化的时间让深度记录变得奢侈。看看他们如何找到解法。",
+                "p1-badge": "生活策展人",
+                "p1-role": "24岁 · 职场新人/小红书用户",
+                "p1-pain-label": "Pain · 审美强迫症",
+                "p1-pain-text": "\"囤了5000+张照片，想发朋友圈但懒得修图排版，最后都成了'电子垃圾'。\"",
+                "p1-sol-label": "Solution · 一键成片",
+                "p1-sol-text": "\"AI 自动识别最佳时刻，匹配模版与色调。随手记秒变杂志大片，审美兜底让我轻松分享。\"",
+                "p2-badge": "空心打工人",
+                "p2-role": "30岁 · 金融PM",
+                "p2-pain-label": "Pain · 忙碌无掌控",
+                "p2-pain-text": "\"每天开会像打仗，下班脑子像浆糊。想复盘却提笔忘字，感觉今天做了很多事又好像什么都没做。\"",
+                "p2-sol-label": "Solution · 语音碎念整理",
+                "p2-sol-text": "\"下班路上碎碎念，AI 自动生成结构化复盘。告诉我'你今天很有耐心'，提供急需的情绪价值。\"",
+                "p3-badge": "Flag立旗王",
+                "p3-role": "21岁 · 考研党",
+                "p3-pain-label": "Pain · 三分钟热度",
+                "p3-pain-text": "\"差生文具多，买了iPad和本子，但坚持打卡不超过3天。一旦断更就破罐子破摔，记录太分散。\"",
+                "p3-sol-label": "Solution · 主动式交互",
+                "p3-sol-text": "\"AI 像私人教练一样主动弹窗问候。通过 Memory Graph 串联碎片记录，让我看到成长的轨迹。\"",
+                "mem-tag": "功能演示：生成层",
+                "mem-sec-title": "永不缺席的温柔聆听者",
+                "mem-sec-desc": "无论昼夜，随时随地。将生活的细枝末节与内心的思绪万千，安心交付给这位永远在场的朋友。",
+                "mem-feat-1-t": "低门槛交互",
+                "mem-feat-1-d": "极简输入。支持语音碎碎念（自动转文字+语气分析）、图片抛送。AI 实时给予高情商的情绪反馈，像和朋友聊天一样自然。",
+                "mem-feat-2-t": "情绪与氛围感知",
+                "mem-feat-2-d": "AI 不止读懂文字，更读懂你的弦外之音。智能提取当天的“情绪关键词”和“氛围 Emoji”，让每一天的记忆都有独特的味道。",
+                "mem-ui-sub": "Timeline",
+                "mem-ui-title": "我的记忆",
+                "mem-ui-save": "<i class='fas fa-plus'></i> 保存今日",
+                "mem-ui-tab-1": "<i class='fas fa-star'></i> 每日",
+                "mem-ui-tab-2": "<i class='far fa-calendar'></i> 每周",
+                "mem-ui-tab-3": "<i class='fas fa-book-open'></i> 每月",
+                "mem-c1-t": "初雪与热咖啡",
+                "mem-c1-mood-1": "惊喜",
+                "mem-c1-mood-2": "治愈",
+                "mem-c1-mood-3": "宁静",
+                "mem-c2-t": "久违的阳光与书",
+                "mem-c2-mood-1": "温暖",
+                "mem-c2-mood-2": "充实",
+                "gal-tag": "视觉展示",
+                "gal-title": "生成的每一页，都是艺术品",
+                "gal-desc": "无需排版，AI 自动抓取你的图片和情绪，基于大模型美学生成手绘风格的精美手账。",
+                "gal-c1-t": "北京初雪 · 清华园",
+                "gal-c1-d": "打雪仗的快乐时光 / Snowball Fight & Happy Times",
+                "gal-c2-t": "环球影城 · 圣诞快乐",
+                "gal-c2-d": "和朋友们最棒的一天 / Best Day Ever with Friends",
+                "gal-c3-t": "治愈时刻 · 药物与希望",
+                "gal-c3-d": "生病时的安慰食物 / Sick day comfort food",
+                "sum-tag": "长期陪伴价值",
+                "sum-sec-title": "建立“生活成就感”",
+                "sum-feat-1-t": "情绪白皮书",
+                "sum-feat-1-d": "AI 会基于与你的日常对话，分析你的情绪波动趋势与积极情绪比例，帮你构建对生活的“满足感”。",
+                "sum-feat-2-t": "时光手账礼物",
+                "sum-feat-2-d": "AI会通过周/月/年生成总结手账，帮你建立生活轨迹的成就感。那些你快要遗忘的小确幸，我们都帮你记得。",
+                "sum-ui-title": "情绪白皮书",
+                "sum-ui-l1": "总记录瞬间",
+                "sum-ui-l2": "情绪正向率",
+                "sum-ui-gen": "<i class='fas fa-wand-magic-sparkles text-tagYellow'></i> 生成新的报告",
+                "sum-ui-w": "周总结",
+                "sum-ui-m": "月总结",
+                "sum-ui-y": "年度总结",
+                "sum-ui-chart": "<i class='fas fa-chart-line text-tagYellow'></i> 近30天情绪波动",
+                "cust-tag": "AI人格",
+                "part-sec-title": "自定义 AI 伙伴",
+                "part-sec-desc": "并不是所有的陪伴都前篇一律。用户可根据自己的喜好定义AI的语言风格。",
+                "cust-ui-title": "选择你的 AI 伙伴",
+                "cust-opt-1": "温柔型",
+                "cust-opt-1-sub": "(小暖)",
+                "cust-opt-1-d": "细腻共情，永远站在你这边，提供情绪价值。",
+                "cust-opt-2": "理智型",
+                "cust-opt-2-sub": "(Ego)",
+                "cust-opt-2-d": "逻辑清晰，帮你拆解问题，提供解决方案。",
+                "time-tag": "每日时刻",
+                "time-sec-title": "自定义手账推送时间",
+                "time-sec-desc": "根据用户的生活习惯，自定义手账生成时间。让AI为你悄悄整理好一天的碎片，睡前打开手机，惊喜已在等候。",
+                "time-ui-title": "设定你的“回忆时刻”",
+                "time-ui-sub": "AI 将在每天的这个时间为你呈上手账",
+                "time-ui-d": "<i class='fas fa-check-circle mr-2'></i>已设定为每天晚上 9 点",
+                "quote-1": "在这个喧嚣的世界里，",
+                "quote-2": "你需要一个",
+                "quote-3": "只属于你的引力场",
+                "quote-rec": "Friend Journal 创始人",
+                "foot-cr": "© 2025 Friend Journal. 基于大语言模型的 AI 陪伴式智能手账.",
+                "foot-p": "隐私协议",
+                "foot-t": "服务条款",
+                "case-raw":"用户只需上传散乱、未修饰的“生活切片”<br>(如：随手拍的风景、食物、截图)",
+                "case-ai":"AI 自动完成：排版布局 + 色调统一 + 文案润色 + 情感升华",
+                "case-view0":"查看原图",
+                "case-view1":"查看原图",
+                "case-view2":"查看原图"
+            },
+            en: {
+                "nav-logo": "Friend Journal",
+                "nav-stories": "Pain Points",
+                "nav-memory": "Demo",
+                "nav-gallery": "Gallery",
+                "nav-summary": "Value",
+                "nav-cta": "Download App",
+                "status-online": "AI Emotional Anchor · Online",
+                "hero-title-1": "Weaving Fragmented Emotions,",
+                "hero-title-2": "Into Eternal Memory Poems.",
+                "hero-desc": "Fully Automated AI Emotional Journal Companion — Your Understanding Listener and Life Biographer.",
+                "btn-start": "Start Talking <i class='fas fa-microphone'></i>",
+                "hero-sub": "Efficiency Revolution: 5s/Page",
+                "phone-app-name": "Jiaxi's Diary",
+                "phone-status-text": "Companion",
+                "phone-prompt": "Anything to share<br>today?~❤️",
+                "story-tag": "Core Pain Points & Opportunities",
+                "user-sec-title": "\"Over-Expression\" vs \"Lack of Recording\"<br>in the Speed Era",
+                "story-desc": "Psychological pressure is surging. Users crave to be heard, but fragmented time makes deep recording a luxury. See how they found a solution.",
+                "p1-badge": "Life Curator",
+                "p1-role": "24 · New Grad / Xiaohongshu User",
+                "p1-pain-label": "Pain · Aesthetic OCD",
+                "p1-pain-text": "\"Hoarded 5000+ photos. Wanted to post but too lazy to edit/layout, so they became 'digital trash'.\"",
+                "p1-sol-label": "Solution · One-Click",
+                "p1-sol-text": "\"AI identifies best moments, matching templates & tones. Casual notes turn into magazine shots instantly.\"",
+                "p2-badge": "Hollow Worker",
+                "p2-role": "30 · Finance PM",
+                "p2-pain-label": "Pain · Busy & Lost",
+                "p2-pain-text": "\"Meetings all day, brain like mush. Wanted to review but couldn't write a word. Felt like I did a lot but accomplished nothing.\"",
+                "p2-sol-label": "Solution · Voice Sort",
+                "p2-sol-text": "\"Voice notes on commute turned into structured reviews. Tells me 'You were patient today', providing emotional value.\"",
+                "p3-badge": "Flag King",
+                "p3-role": "21 · Student",
+                "p3-pain-label": "Pain · 3-Minute Passion",
+                "p3-pain-text": "\"Bought iPad & notebooks but quit in 3 days. Once I miss a day, I give up. Records are too scattered.\"",
+                "p3-sol-label": "Solution · Proactive",
+                "p3-sol-text": "\"AI greets me proactively like a coach. Connecting fragmented records via Memory Graph to show growth trajectories.\"",
+                "mem-tag": "Demo: Generation Layer",
+                "mem-sec-title": "The Ever-Present Gentle Listener",
+                "mem-sec-desc": "Day or night, anytime, anywhere. Entrust the fleeting details of life and the depths of your inner thoughts to a friend who is always there.",
+                "mem-feat-1-t": "Low Friction Interaction",
+                "mem-feat-1-d": "Minimal input. Supports voice ramblings (text + tone analysis) & photo drops. AI gives high-EQ feedback naturally.",
+                "mem-feat-2-t": "Mood & Vibe Sensing",
+                "mem-feat-2-d": "AI reads between the lines. Extracts \"Mood Keywords\" and \"Atmosphere Emojis\", making every memory unique.",
+                "mem-ui-sub": "Timeline",
+                "mem-ui-title": "My Memories",
+                "mem-ui-save": "<i class='fas fa-plus'></i> Save Today",
+                "mem-ui-tab-1": "<i class='fas fa-star'></i> Daily",
+                "mem-ui-tab-2": "<i class='far fa-calendar'></i> Weekly",
+                "mem-ui-tab-3": "<i class='fas fa-book-open'></i> Monthly",
+                "mem-c1-t": "First Snow & Warm Coffee",
+                "mem-c1-mood-1": "Surprise",
+                "mem-c1-mood-2": "Healing",
+                "mem-c1-mood-3": "Peace",
+                "mem-c2-t": "Long-lost Sunshine & Book",
+                "mem-c2-mood-1": "Warm",
+                "mem-c2-mood-2": "Fulfilled",
+                "gal-tag": "Visual Gallery",
+                "gal-title": "Every Page is Art",
+                "gal-desc": "No layout needed. AI captures your photos and moods to generate hand-drawn style journals based on aesthetics models.",
+                "gal-c1-t": "First Snow · Tsinghua",
+                "gal-c1-d": "Snowball Fight & Happy Times",
+                "gal-c2-t": "Universal · Merry Christmas",
+                "gal-c2-d": "Best Day Ever with Friends",
+                "gal-c3-t": "Healing Moment · Meds & Hope",
+                "gal-c3-d": "Sick day comfort food",
+                "sum-tag": "Long-term Value",
+                "sum-sec-title": "Building \"Life Achievement\"",
+                "sum-feat-1-t": "Emotion Whitepaper",
+                "sum-feat-1-d": "AI will analyze the trends of your emotional fluctuations and the proportion of positive emotions based on daily conversations with you, helping you build a sense of life satisfaction.",
+                "sum-feat-2-t": "Time Journal Gift",
+                "sum-feat-2-d": "AI will generate weekly/monthly/yearly summary journals to help you build a sense of accomplishment for your life journey. We’ll keep track of all those little joys that you’re about to forget.",
+                "sum-ui-title": "Emotion Whitepaper",
+                "sum-ui-l1": "Total Moments",
+                "sum-ui-l2": "Emotion Positive Rate",
+                "sum-ui-gen": "<i class='fas fa-wand-magic-sparkles text-tagYellow'></i> Generate New Report",
+                "sum-ui-w": "Weekly",
+                "sum-ui-m": "Monthly",
+                "sum-ui-y": "Yearly",
+                "sum-ui-chart": "<i class='fas fa-chart-line text-tagYellow'></i> 30-Day Mood Trend",
+                "cust-tag": "AI Personality",
+                "part-sec-title": "Customizable AI Friend",
+                "part-sec-desc": "Not all companionship is cut from the same cloth. Users can customize the AI’s language style according to their personal preferences.",
+                "cust-ui-title": "Choose Your AI Partner",
+                "cust-opt-1": "Gentle Type",
+                "cust-opt-1-sub": "(Warm)",
+                "cust-opt-1-d": "Delicate empathy, always on your side, providing emotional value.",
+                "cust-opt-2": "Rational Type",
+                "cust-opt-2-sub": "(Ego)",
+                "cust-opt-2-d": "Logical, helps you deconstruct problems and provide solutions.",
+                "time-tag": "Daily Moment",
+                "time-sec-title": "Customizable Journal Delivery Time",
+                "time-sec-desc": "Tailor the journal generation time to your daily routine. Let the AI quietly organize the fragmented moments of your day — when you pick up your phone before going to the bed, a pleasant surprise awaits you..",
+                "time-ui-title": "Set Your \"Memory Time\"",
+                "time-ui-sub": "AI will present your journal at this time daily",
+                "time-ui-d": "<i class='fas fa-check-circle mr-2'></i>Set to 9:00 PM daily",
+                "quote-1": "In this noisy world,",
+                "quote-2": "You need a ",
+                "quote-3": "gravitational field of your own",
+                "quote-rec": "Founder of Friend Journal",
+                "foot-cr": "© 2025 Friend Journal. AI Companion Journaling System based on LLM.",
+                "foot-p": "Privacy Policy",
+                "foot-t": "Terms of Service",
+                "case-raw":"Simply upload your raw, unedited \"slices of life\"—be it a quick snap of a view, a meal, or a random screenshot.",
+                "case-ai":"AI-Powered Perfection: > Layout & Design + Harmonized Tones + Polished Copy + Emotional Resonance",
+                "case-view0":"View Original",
+                "case-view1":"View Original",
+                "case-view2":"View Original"
+            }
+        };
+
+        let currentLang = 'zh';
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            document.getElementById('lang-text').innerText = currentLang === 'zh' ? 'EN' : '中';
+            
+            const texts = translations[currentLang];
+            for (const key in texts) {
+                const element = document.getElementById(key);
+                if (element) {
+                    // Special handling for nested SVG in quote-3
+                    if (key === 'quote-3') {
+                        element.innerHTML = texts[key] + '<svg class="absolute -bottom-2 left-0 w-full" height="10" viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0,5 Q50,10 100,5" stroke="#FFD700" stroke-width="2" fill="none" opacity="0.5"/></svg>';
+                    } else {
+                        element.innerHTML = texts[key];
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
